@@ -1,0 +1,862 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Das Budenzauber Quiz</title>
+  <style>
+    :root {
+      --primary: #004d8c;
+      --secondary: #0080c0;
+      --accent: #ffcc00;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #28a745;
+      --danger: #dc3545;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--dark);
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 2rem;
+      position: relative;
+    }
+    .header::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .start-screen {
+      text-align: center;
+      padding: 30px;
+      background: url('https://i.imgur.com/7QjZJvK.png') no-repeat center center;
+      background-size: cover;
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .start-title {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }
+    .start-subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+    .quiz-container {
+      padding: 30px;
+    }
+    .question {
+      font-size: 1.5rem;
+      margin-bottom: 25px;
+      line-height: 1.4;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .option {
+      padding: 16px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      background: #f9f9f9;
+    }
+    .option:hover {
+      background: var(--light);
+      border-color: var(--secondary);
+    }
+    .option.selected {
+      border-color: var(--secondary);
+      background: #e3f2fd;
+    }
+    .option.correct {
+      border-color: var(--success);
+      background: #d4edda;
+      color: var(--success);
+    }
+    .option.incorrect {
+      border-color: var(--danger);
+      background: #f8d7da;
+      color: var(--danger);
+    }
+    .explanation {
+      margin-top: 20px;
+      padding: 18px;
+      background: #f0f7ff;
+      border-left: 5px solid var(--secondary);
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      font-size: 1.05rem;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    button {
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-prev {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-next {
+      background: var(--secondary);
+      color: white;
+    }
+    .btn-start {
+      background: var(--accent);
+      color: var(--dark);
+      font-weight: bold;
+      font-size: 1.3rem;
+      padding: 18px 40px;
+      display: block;
+      margin: 40px auto;
+      border-radius: 50px;
+    }
+    .btn-view-leaderboard {
+      background: var(--secondary);
+      color: white;
+      margin-top: 15px;
+      font-size: 1.1rem;
+      padding: 12px 25px;
+    }
+    .input-group {
+      margin: 20px 0;
+    }
+    input, select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .result {
+      text-align: center;
+      padding: 50px 30px;
+    }
+    .result h2 {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+    .score {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 15px 0;
+    }
+    .result-message {
+      font-size: 1.2rem;
+      margin: 20px 0;
+    }
+    .btn-restart {
+      background: var(--accent);
+      color: var(--dark);
+      font-weight: bold;
+      padding: 16px 40px;
+      border-radius: 50px;
+      margin-top: 20px;
+    }
+    .progress {
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    .leaderboard {
+      padding: 30px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .leaderboard h2 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    .leaderboard table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .leaderboard th, .leaderboard td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .leaderboard th {
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+    }
+    .leaderboard tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .leaderboard tr:hover {
+      background: #e3f2fd;
+    }
+    .leaderboard .rank {
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .hide {
+      display: none;
+    }
+    @media (max-width: 600px) {
+      .header { font-size: 1.5rem; padding: 20px; }
+      .question { font-size: 1.3rem; }
+      .options .option { padding: 14px; font-size: 1rem; }
+      .controls { flex-direction: column; gap: 12px; }
+      .controls button { width: 100%; }
+      .btn-start, .btn-restart { font-size: 1.2rem; padding: 16px; }
+      .start-title { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Start Screen with Image -->
+    <div id="name-screen" class="start-screen">
+      <h1 class="start-title">Das Budenzauber Quiz</h1>
+      <p class="start-subtitle">Teste dein Wissen über DÖRKEN – mit Weihnachtszauber und Drachen!</p>
+      <div class="input-group">
+        <label for="name-input">Dein Name:</label>
+        <input type="text" id="name-input" placeholder="z. B. Max Mustermann" required>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">Quiz starten</button>
+      <button class="btn-view-leaderboard" onclick="showLeaderboard()">Bestenliste ansehen</button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="quiz-container hide">
+      <div class="progress">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="question" id="question-text">Frage wird geladen...</div>
+      <div class="options" id="options-container">
+        <!-- Options dynamically inserted here -->
+      </div>
+      <div class="explanation" id="explanation" style="display: none;"></div>
+      <div class="controls">
+        <button class="btn-prev" onclick="prevQuestion()" style="display: none;">Zurück</button>
+        <button class="btn-next" onclick="nextQuestion()">Weiter</button>
+      </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="result hide">
+      <h2>Glückwunsch!</h2>
+      <p>Du hast das Budenzauber Quiz abgeschlossen.</p>
+      <div class="score" id="final-score">0 / 30</div>
+      <p class="result-message" id="result-message">Du hast noch viel zu lernen – aber du bist auf dem richtigen Weg!</p>
+      <button class="btn-restart" onclick="restartQuiz()">Nochmal spielen</button>
+      <button class="btn-view-leaderboard" onclick="showLeaderboard()">Bestenliste ansehen</button>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div id="leaderboard-screen" class="leaderboard hide">
+      <h2>🏆 Bestenliste</h2>
+      <table id="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>Name</th>
+            <th>Punkte</th>
+            <th>Datum</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Dynamisch gefüllt -->
+        </tbody>
+      </table>
+      <button class="btn-restart" onclick="goBackToStart()">Zurück zum Start</button>
+      <button class="btn-view-leaderboard" onclick="resetLeaderboard()" style="background: var(--danger); margin-top: 10px;">
+        Bestenliste zurücksetzen
+      </button>
+    </div>
+
+    <!-- Audio Player (hidden) -->
+    <audio id="bg-music" loop>
+      <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+      Dein Browser unterstützt kein Audio.
+    </audio>
+
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "Welche beiden Brüder gründeten 1892 die Firma DÖRKEN zur Herstellung von Lacken und Rostschutzfarben?",
+        options: [
+          "Dr. Hellmut Herminghaus und Ewald Dörken",
+          "Karl Dörken und Dr. Heinrich Herminghaus",
+          "Karl E. Dörken und Ute Herminghaus",
+          "Dr. Carl Dörken und Ewald Dörken"
+        ],
+        correct: 3,
+        explanation: "Die Brüder Dr. Carl Dörken (Chemiker) und Ewald Dörken (Kaufmann) gründeten 1892 gemeinsam das Unternehmen DÖRKEN. Ihre Komplementarität – chemisches Fachwissen gepaart mit kaufmännischem Geschick – bildete die Grundlage für die Entwicklung von Lacken und Rostschutzfarben."
+      },
+      {
+        question: "In welche zwei Hauptgeschäftsbereiche ist die DÖRKEN-Gruppe heute strukturiert?",
+        options: [
+          "Bautenfarben und Bauverbundfolien",
+          "Multitexx und Protec Systempasten",
+          "Dörken MKS-Systeme und CD-Color",
+          "DÖRKEN Coatings und DÖRKEN Membranes"
+        ],
+        correct: 3,
+        explanation: "Die DÖRKEN-Gruppe ist heute in zwei strategische Geschäftsbereiche gegliedert: DÖRKEN Coatings (Oberflächenschutz) und DÖRKEN Membranes (Schutzfolien und Dampfbremsfolien). Diese Struktur bündelt die Kompetenzen des Unternehmens in den Bereichen Oberflächenschutz und Schutzfolien."
+      },
+      {
+        question: "Was ist der Hauptvorteil der doppelten Klebestreifen bei der Unterdeckbahn DELTA®-MAXX PLUS?",
+        options: [
+          "Eine garantierte Langzeitbeständigkeit von 50 Jahren",
+          "Erhöhte Hagelschlagbeständigkeit bei extremen Wetterbedingungen",
+          "Material- und Zeitersparnis durch Wendbarkeit der Bahn",
+          "Verarbeitbarkeit bei Temperaturen bis zu -10 °C"
+        ],
+        correct: 2,
+        explanation: "Dank der beidseitigen Klebestreifen an den Bahnenrändern kann ein Reststück einfach gedreht und weiterverwendet werden. Dies ermöglicht eine effiziente Verlegung, minimiert den Verschnitt und spart so sowohl Material als auch Arbeitszeit."
+      },
+      {
+        question: "Welche Funktion erfüllen DELTA®-Fassadenbahnen bei Konstruktionen mit offenen Fugen?",
+        options: [
+          "Sie dienen als Putzträgergewebe für die direkte Beschichtung.",
+          "Sie schützen die dahinterliegende Dämmschicht vor Feuchtigkeit und Schmutz.",
+          "Sie dienen als farbige Dampfsperre auf der Innenseite der Dämmung.",
+          "Sie erhöhen die Druckfestigkeit der Fassadenverkleidung."
+        ],
+        correct: 1,
+        explanation: "Bei Fassaden mit offenen Fugen ist die Dämmebene äußeren Einflüssen wie Regen, Schmutz oder Wind ausgesetzt. DELTA®-Fassadenbahnen bilden eine sichere schützende Hinterlüftungsebene, die die Dämmung vor diesen Einwirkungen bewahrt – ohne die diffusionsoffene Funktion der Konstruktion zu beeinträchtigen."
+      },
+      {
+        question: "Welchen Grundsatz verfolgt DÖRKEN seit mehr als 125 Jahren, der sich sowohl auf Produkte als auch auf die Unternehmenskultur bezieht?",
+        options: [
+          "„Innovation ist unsere Tradition“",
+          "„DÖRKEN schützt Werte“",
+          "„Qualität Made in Germany“",
+          "„Experten für das Verborgene“"
+        ],
+        correct: 1,
+        explanation: "Der Leitsatz „DÖRKEN schützt Werte“ umfasst sowohl den materiellen Schutz von Bausubstanz, Gebäuden und Investitionsgütern durch hochwertige Systemlösungen als auch immaterielle Werte wie Vertrauen, Partnerschaft, Menschlichkeit und Verantwortung in der Unternehmenskultur."
+      },
+      {
+        question: "Mit welchem Qualitätssiegel für Innovationsmanagement wurde DÖRKEN wiederholt ausgezeichnet?",
+        options: [
+          "Deutscher Materialeffizienzpreis",
+          "Fair Company",
+          "BEST PLACE TO LEARN",
+          "TOP 100"
+        ],
+        correct: 3,
+        explanation: "Das „TOP 100“-Siegel zeichnet die innovativsten Unternehmen des deutschen Mittelstands aus. DÖRKEN wurde mehrfach als einer der besten Innovatoren in seiner Größenklasse ausgezeichnet – ein Beleg für exzellentes Innovationsmanagement, Forschungsstärke und zukunftsorientierte Produktentwicklung."
+      },
+      {
+        question: "Welchen Mobilitäts-Benefit bietet DÖRKEN seinen Mitarbeitern an?",
+        options: [
+          "JobRad",
+          "Treibstoffzuschüsse für Pendler",
+          "Ein Firmenwagen für alle Angestellten",
+          "Ein kostenloses ÖPNV-Ticket"
+        ],
+        correct: 0,
+        explanation: "Über das JobRad-Programm können DÖRKEN-Mitarbeiter Fahrräder und E-Bikes zu günstigen Konditionen leasen. Damit fördert das Unternehmen nachhaltige Mobilität, Gesundheit und eine ausgeglichene Work-Life-Balance – ganz im Sinne seiner werteorientierten Unternehmenskultur."
+      },
+      {
+        question: "An welchem Standort hat DÖRKEN seit 2015 eines der modernsten Werke für die Spinnvliesfertigung in Europa errichtet?",
+        options: [
+          "Stuttgart",
+          "Düren",
+          "Herdecke",
+          "Hagen-Vorhalle"
+        ],
+        correct: 3,
+        explanation: "Am Standort Hagen-Vorhalle – in unmittelbarer Nähe zum Firmenhauptsitz in Herdecke – errichtete DÖRKEN seit 2015 eines der modernsten Spinnvlies-Werke Europas. Der Standort wurde gezielt zum „Competence Center Membranes“ ausgebaut und spielt eine zentrale Rolle in der Entwicklung und Produktion innovativer Schutzmembranen für die Bauindustrie."
+      },
+      {
+        question: "Welchen Garantiezeitraum gewährt DÖRKEN auf die fachgerechte Funktion der DELTA®-MAXX Unterdeckbahnen?",
+        options: [
+          "25 Jahre",
+          "10 Jahre",
+          "100 Jahre",
+          "30 Jahre"
+        ],
+        correct: 3,
+        explanation: "DÖRKEN gewährt eine Garantie von 30 Jahren auf die fachgerechte Funktion der DELTA®-MAXX Unterdeckbahnen – vorausgesetzt, die Verarbeitung erfolgt gemäß den Herstellervorgaben. Damit unterstreicht das Unternehmen sein Vertrauen in die Langlebigkeit und Qualität seiner Dach-Unterdecksysteme."
+      },
+      {
+        question: "Welche Aufgabe hat das aufkaschierte Geotextil (Filtervlies) bei einer Dränbahn wie der DELTA®-MS DRAIN?",
+        options: [
+          "Es verhindert das Zuschlämmen der Noppenstruktur durch Erdreich.",
+          "Es dient als zusätzliche Abdichtungsschicht gegen drückendes Wasser.",
+          "Es sorgt für eine gleitende Verlegung auf druckempfindlichen Abdichtungen.",
+          "Es schützt die Noppenbahn vor UV-Strahlung während der Lagerung."
+        ],
+        correct: 0,
+        explanation: "Das aufkaschierte Filtervlies lässt Wasser problemlos durch, hält jedoch feine Bodenpartikel (z. B. Schluff oder Sand) zurück. Dadurch bleibt die Noppenstruktur der Dränbahn frei und gewährleistet eine langfristig sichere Sicker- und Dränfunktion – ohne Verschlammung oder Verstopfung."
+      },
+      {
+        question: "Welches innovative Lackprodukt verhalf DÖRKEN 1902 zu einem entscheidenden Marktvorsprung?",
+        options: [
+          "EBURIT",
+          "Lucite",
+          "DELTA-MKS",
+          "Bunt-Delta"
+        ],
+        correct: 0,
+        explanation: "Der holzartige Lack EBURIT, entwickelt durch ein neuartiges Holzölverkochungsverfahren, brachte DÖRKEN 1902 den Durchbruch. Er wurde für Jahrzehnte zum führenden Malerwerkstoff und stellte einen Meilenstein in der frühen Firmengeschichte dar – dank seiner hervorragenden Haltbarkeit und optischen Holzimitation."
+      },
+      {
+        question: "Was war das Ergebnis der Umstrukturierung bei DÖRKEN im August 2020?",
+        options: [
+          "Die Übernahme der Wischemann-Gruppe",
+          "Die Gründung der Sparte Bauverbundfolien",
+          "Die Ernennung des ersten externen Vorstands",
+          "Der Zusammenschluss von Dörken MKS-Systeme, CD-Color und Protec zur Dörken Coatings GmbH & Co. KG"
+        ],
+        correct: 3,
+        explanation: "Im August 2020 wurden die drei Geschäftsbereiche Dörken MKS-Systeme, CD-Color und Protec unter dem Dach der neu gegründeten Dörken Coatings GmbH & Co. KG zusammengeführt. Ziel war es, die Kompetenzen im Bereich Farben, Lacke und Systempasten zu bündeln und Synergien in Entwicklung, Produktion und Vertrieb besser zu nutzen."
+      },
+      {
+        question: "Welches Produkt markierte 1963 den Einstieg von DÖRKEN in den Markt der Bauverbundfolien?",
+        options: [
+          "Die Dachbeschichtung für Güterwagen",
+          "Die Unterspannbahn DELTA®-FOL SPF",
+          "Die Noppenbahn DELTA-MS",
+          "Die Funktionsbeschichtung DELTA®-LIQUIXX"
+        ],
+        correct: 1,
+        explanation: "Mit der gitterverstärkten Kunststoff-Unterspannbahn DELTA®-FOL SPF stieg DÖRKEN 1963 erfolgreich in den Markt der Bauverbundfolien ein. Das Produkt war speziell für Steildächer konzipiert und schützte Dachkonstruktionen in ganz Europa zuverlässig vor Witterungseinflüssen – es war das erste Produkt der damals neu gegründeten Sparte."
+      },
+      {
+        question: "Welche innovative Technologie sorgt bei den Vliesen von DÖRKEN für eine höhere Festigkeit durch eine gezielte Stabilisierung der Fasern?",
+        options: [
+          "DELTA®-Active-Membrane-System",
+          "DELTA®-BiCo Kern-Mantel-Fasertechnologie",
+          "Orkanofen-Test-Verfahren",
+          "DELTA®-Ad Tec Klebetechnologie"
+        ],
+        correct: 1,
+        explanation: "Die DELTA®-BiCo Kern-Mantel-Fasertechnologie verwendet zweikomponentige Fasern: ein fester Kern sorgt für Stabilität, während ein weicherer Mantel bei der thermischen Verfestigung die Fasern optimal miteinander verbindet. Dadurch wird die mechanische Festigkeit des Vlieses deutlich verbessert – bei gleichzeitig hoher Flexibilität und Reißfestigkeit."
+      },
+      {
+        question: "Wofür wurde die pastöse Funktionsbeschichtung DELTA®-LIQUIXX entwickelt?",
+        options: [
+          "Als Nageldichtungsmasse unter Konterlatten",
+          "Um luftdichte Anschlüsse von Folien an kritischen Stellen herzustellen",
+          "Als vollflächige, wasserdichte Beschichtung für Flachdächer",
+          "Als hochtemperaturbeständiger Korrosionsschutz in der Stahlverarbeitung"
+        ],
+        correct: 1,
+        explanation: "DELTA®-LIQUIXX ist eine pastöse, sehr gut verarbeitbare Funktionsbeschichtung, die speziell für anspruchsvolle Detailanschlüsse entwickelt wurde – etwa an Rohrdurchführungen, aufsteigenden Wänden oder Dachgauben. Sie ermöglicht eine sichere, luftdichte und witterungsbeständige Abdichtung auch in komplexen Bereichen."
+      },
+      {
+        question: "Wie viele interne Entwickler beschäftigen sich bei DÖRKEN kontinuierlich mit neuen Ideen und der Weiterentwicklung von Produkten?",
+        options: [
+          "Etwa 75",
+          "Über 100",
+          "Etwa 10",
+          "Etwa 40"
+        ],
+        correct: 3,
+        explanation: "Rund 40 interne Entwickler arbeiten bei DÖRKEN kontinuierlich an der Innovation und Optimierung von Produkten – sei es im Bereich Oberflächenschutz, Bauverbundfolien oder Systemlösungen. Diese Teamgröße unterstreicht den hohen Stellenwert von Forschung und Entwicklung im Unternehmen."
+      },
+      {
+        question: "Welche beiden Marken vereint der Geschäftsbereich DÖRKEN Membranes unter seinem Dach?",
+        options: [
+          "DELTA® und LUCITE®",
+          "DELTA® und EBURIT",
+          "DELTA® und Multitexx",
+          "DELTA® und CD-Color"
+        ],
+        correct: 2,
+        explanation: "Der Geschäftsbereich DÖRKEN Membranes bündelt die Marken DELTA® (führend bei Dach-, Wand- und Abdichtungssystemen) und Multitexx (spezialisiert auf hochleistungsfähige Spinnvliese). Diese Kombination vereint Qualitäts- und Technologieführerschaft im Bereich der Bauschutzmembranen und funktionalen Vliesstoffe."
+      },
+      {
+        question: "Im Jahr 2022 erweiterte DÖRKEN seine Organisation um eine dritte Säule. Welchen Bereich deckt diese ab?",
+        options: [
+          "Logistik und Supply Chain Management",
+          "Digitale Dienstleistungen und Software",
+          "Erneuerbare Energien und Solartechnologie",
+          "Kunststoffformteile und Tiefziehverfahren"
+        ],
+        correct: 3,
+        explanation: "Durch die Übernahme der Wischemann-Gruppe im Jahr 2022 etablierte DÖRKEN eine dritte strategische Säule neben Coatings und Membranes: den Bereich Kunststoffformteile und Tiefziehverfahren. Daraus entstand ein eigenes Competence Center, das hochpräzise Kunststoffkomponenten für Industrie und Bau entwickelt und produziert."
+      },
+      {
+        question: "Welchen Namen trägt das Betriebsrestaurant von DÖRKEN am Standort Herdecke?",
+        options: [
+          "„Kochs Treff“",
+          "„Die Kantine“",
+          "„Herd-Ecke“",
+          "„DELTA-Bistro“"
+        ],
+        correct: 2,
+        explanation: "Der Name „Herd-Ecke“ ist ein cleveres Wortspiel: Er verbindet den Firmenstandort Herdecke mit dem Herd – dem zentralen Symbol für Kochen und Gemeinschaft. Damit spiegelt der Name nicht nur den Ort, sondern auch den sozialen und kulinarischen Zweck des Betriebsrestaurants wider."
+      },
+      {
+        question: "Welche Eigenschaft der Dränbahn DELTA®-TERRAXX ULTRA wird besonders hervorgehoben?",
+        options: [
+          "Sie ist in sieben verschiedenen Standardfarben erhältlich.",
+          "Sie ist besonders leicht und flexibel für kleine Budgets.",
+          "Sie hat eine sehr hohe Druckfestigkeit von 750 kN/m².",
+          "Sie verfügt über eine integrierte Heizfunktion gegen Frost."
+        ],
+        correct: 2,
+        explanation: "Die DELTA®-TERRAXX ULTRA zeichnet sich durch eine extreme Druckfestigkeit von 750 kN/m² aus. Dadurch eignet sie sich hervorragend für stark belastete Bereiche, wie z. B. LKW-befahrbare Flächen, Tiefgaragen oder Bauwerke mit großen Einbautiefen."
+      },
+      {
+        question: "Was ist die Funktion der Noppenbahn DELTA®-PT?",
+        options: [
+          "Sie wird als Sauberkeitsschicht unter armierten Sohlplatten eingesetzt.",
+          "Sie schützt druckempfindliche Abdichtungen im Außenbereich.",
+          "Sie dient als leistungsfähige Sickerschicht im Tief- und Ingenieurbau.",
+          "Sie dient der rauminnenseitigen Sanierung feuchter Kellerwände mit Hinterlüftung."
+        ],
+        correct: 3,
+        explanation: "Die DELTA®-PT ist speziell für die Innensanierung von feuchten Kellerwänden konzipiert. Die Noppenstruktur erzeugt einen belüfteten Hintergrund, der Feuchtigkeit abführt, während das aufkaschierte Putzträgergewebe eine direkte Innenverputzung ohne zusätzliche Unterkonstruktion ermöglicht – effizient, trocken und dauerhaft."
+      },
+      {
+        question: "Welche besondere Eigenschaft hat die Hybrid-Funktionsfarbe Lucite® MultiResist PRO?",
+        options: [
+          "Sie zeigt durch einen Farbwechsel ihren Trocknungsgrad an.",
+          "Sie ist resistent gegenüber Bakterien und Schimmel ohne biozide Wirkstoffe.",
+          "Sie reduziert die Zunderbildung in der Stahlverarbeitung um bis zu 80 %.",
+          "Sie ist ein lösungsmittelfreier Fassadenanstrich auf Sol-Silicatbasis."
+        ],
+        correct: 1,
+        explanation: "Lucite® MultiResist PRO überzeugt durch eine schadstofffreie Rezeptur, die ohne klassische Biozide auskommt – und dennoch eine hohe Beständigkeit gegen Schimmel und Bakterien bietet. Dadurch eignet sie sich ideal für sensible Innenräume wie Krankenhäuser, Schulen oder Pflegeeinrichtungen."
+      },
+      {
+        question: "Welches einzigartige Prüfverfahren entwickelte DÖRKEN, um die Langlebigkeit seiner Unterdeckbahnen unter realistischen Bedingungen zu testen?",
+        options: [
+          "Kegelfallversuch nach EN ISO 13433",
+          "Schlagregentest der TU Berlin",
+          "„Orkanofen-Test“",
+          "CBR-Stempeldurchdrückversuch"
+        ],
+        correct: 2,
+        explanation: "Der „Orkanofen-Test“ ist ein von DÖRKEN entwickeltes Thermo-Oxidations-Verfahren, bei dem Unterdeckbahnen über mehrere Wochen simultan hohen Temperaturen und starker Luftzirkulation („Orkan“-ähnlich) ausgesetzt werden. Dies simuliert beschleunigt die Langzeitbelastung durch Witterung und Alterung – und ermöglicht so eine realistische Prognose der Funktionsdauer von bis zu 30 Jahren."
+      },
+      {
+        question: "Welches historische Ereignis in den 1970er Jahren stellte insbesondere die Kunststoffsparte von DÖRKEN vor große Herausforderungen?",
+        options: [
+          "Die Währungsreform",
+          "Die Ölkrise",
+          "Die Gründung der Europäischen Union",
+          "Der Zweite Weltkrieg"
+        ],
+        correct: 1,
+        explanation: "Die Ölkrise der 1970er Jahre führte zu einem dramatischen Anstieg der Rohölpreise – eine existenzielle Herausforderung für Chemie- und Kunststoffunternehmen wie DÖRKEN, deren Produktion stark auf erdölbasierte Rohstoffe angewiesen war. Das Unternehmen musste damals innovative Wege finden, um Ressourcen effizienter zu nutzen und die Produktentwicklung anzupassen."
+      },
+      {
+        question: "In wie vielen Ausbildungsberufen bildet DÖRKEN laut einer Pressemitteilung aus und erhielt dafür das Siegel „BEST PLACE TO LEARN“?",
+        options: [
+          "In 18 Ausbildungsberufen",
+          "In 25 Ausbildungsberufen",
+          "In 5 Ausbildungsberufen",
+          "In 12 Ausbildungsberufen"
+        ],
+        correct: 0,
+        explanation: "DÖRKEN bildet in 18 verschiedenen Ausbildungsberufen aus – von kaufmännischen und technischen Berufen bis hin zu dualen Studiengängen. Dieses breite und zukunftsorientierte Ausbildungsangebot wurde mit dem renommierten Siegel „BEST PLACE TO LEARN“ ausgezeichnet und unterstreicht das Engagement des Unternehmens für Nachwuchsförderung und Bildungsqualität."
+      },
+      {
+        question: "Welches Mikroschicht-Korrosionsschutzsystem führte DÖRKEN 1981 ein, das schnell eine bedeutende Marktposition erlangte?",
+        options: [
+          "DELTA-PROTEKT® KL 105",
+          "DELTA-MKS",
+          "DELTA-HEAT®",
+          "LUCITE®"
+        ],
+        correct: 1,
+        explanation: "1981 führte DÖRKEN mit DELTA-MKS ein hochleistungsfähiges, schwermetallfreies Mikroschicht-Korrosionsschutzsystem ein. Es bot erstmals eine umweltverträgliche Alternative zu klassischen Zink- oder Chrom-basierten Verfahren und etablierte sich rasch als Technologieführer in der Oberflächenveredelung – besonders in der Automobil- und Zulieferindustrie."
+      },
+      {
+        question: "Wodurch zeichnen sich laut Unternehmenswerten die Mitarbeiter von DÖRKEN aus?",
+        options: [
+          "Fokus auf kurzfristige Ziele und schnelle Gewinne",
+          "Strikte Befolgung von Anweisungen ohne Eigeninitiative",
+          "Individualismus und Wettbewerbsdenken",
+          "Sorgfalt, Verantwortungsbewusstsein und Ehrlichkeit"
+        ],
+        correct: 3,
+        explanation: "DÖRKEN betont, dass Sorgfalt, Verantwortungsbewusstsein und Ehrlichkeit die zentralen Charaktereigenschaften seiner Mitarbeitenden sind. Diese Werte bilden die Grundlage für vertrauensvolle Zusammenarbeit, langfristige Partnerschaften und die Zuverlässigkeit des Unternehmens – sowohl intern als auch gegenüber Kunden und Lieferanten."
+      },
+      {
+        question: "Was war ein entscheidender Schritt von DÖRKEN in den 1990er Jahren in Richtung Nachhaltigkeit?",
+        options: [
+          "Die Übernahme der Produktion lösungsmittelfreier Baufarben und die Aufgabe des Industrielackgeschäfts",
+          "Die Einführung der ersten recycelbaren Noppenbahnen",
+          "Die Installation einer Photovoltaikanlage auf den Werksdächern",
+          "Die Gründung eines eigenen Umweltmanagement-Teams"
+        ],
+        correct: 0,
+        explanation: "In den 1990er Jahren vollzog DÖRKEN einen wegweisenden Wandel: Durch die Übernahme der Marken Lucite und Imlar CPC stieg das Unternehmen gezielt in die Produktion lösungsmittelfreier Baufarben ein – und stellte das traditionelle Industrielackgeschäft sukzessive ein. Dadurch sank der Lösemittelverbrauch am Standort Herdecke innerhalb von nur zwei Jahren um 70 %, ein Meilenstein auf dem Weg zu einer nachhaltigeren Produktion."
+      },
+      {
+        question: "Welche Unterstützung bietet DÖRKEN seinen Mitarbeitern im Bereich 'Wohnen und Leben'?",
+        options: [
+          "Zinslose Darlehen für den Kauf von Wohneigentum",
+          "Einen kostenlosen Umzugsservice bei einem Wohnortwechsel",
+          "Einen firmeneigenen Kindergarten auf dem Werksgelände",
+          "Die Vermittlung von attraktivem Wohnraum in Herdecke über DELTA Immobilien"
+        ],
+        correct: 3,
+        explanation: "DÖRKEN unterstützt seine Mitarbeitenden bei der Wohnungssuche durch DELTA Immobilien – eine firmennahe Einrichtung, die erschwinglichen Wohnraum in Herdecke anbietet. Vom Appartement bis zur Doppelhaushälfte hilft das Unternehmen so, die Wohnsituation im direkten Umfeld des Arbeitsplatzes zu verbessern und die Bindung an die Region zu stärken."
+      },
+      {
+        question: "Was war das Ziel des Projekts 'WIR.IHR.HIER.', bei dem DÖRKEN seinen Mitarbeitern 1000 Euro netto zahlte?",
+        options: [
+          "Eine Vorauszahlung auf das Weihnachtsgeld",
+          "Die Unterstützung der lokalen Wirtschaft in Herdecke während einer Krise",
+          "Die Feier des 125-jährigen Firmenjubiläums",
+          "Die Belohnung für einen Rekordumsatz im Vorjahr"
+        ],
+        correct: 1,
+        explanation: "Im Rahmen des Projekts „WIR.IHR.HIER.“ erhielten alle Mitarbeitenden 1.000 Euro netto, mit der klaren Bitte, dieses Geld gezielt bei lokalen Händlern, Gastronomen und Dienstleistern in Herdecke und Umgebung auszugeben. So unterstützte DÖRKEN unmittelbar die regionale Wirtschaft in einer wirtschaftlich schwierigen Zeit – ein starkes Zeichen von sozialer Verantwortung und Verbundenheit mit der Heimat."
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let selectedAnswer = null;
+    let answers = Array(questions.length).fill(null);
+    let playerName = "";
+
+    // Load leaderboard from localStorage
+    function loadLeaderboard() {
+      const lb = localStorage.getItem('dörken-leaderboard');
+      return lb ? JSON.parse(lb) : [];
+    }
+
+    // Save leaderboard to localStorage
+    function saveLeaderboard(leaderboard) {
+      localStorage.setItem('dörken-leaderboard', JSON.stringify(leaderboard));
+    }
+
+    // Reset leaderboard
+    function resetLeaderboard() {
+      if (confirm("Bist du sicher, dass du die Bestenliste zurücksetzen willst? Alle Einträge werden gelöscht.")) {
+        localStorage.removeItem('dörken-leaderboard');
+        alert("Bestenliste wurde zurückgesetzt!");
+        showLeaderboard();
+      }
+    }
+
+    // Show name screen
+    function showNameScreen() {
+      document.getElementById('name-screen').style.display = 'flex';
+      document.getElementById('quiz-screen').classList.add('hide');
+      document.getElementById('result-screen').classList.add('hide');
+      document.getElementById('leaderboard-screen').classList.add('hide');
+    }
+
+    // Start quiz after name entry
+    function startQuiz() {
+      const nameInput = document.getElementById('name-input').value.trim();
+      if (!nameInput) {
+        alert("Bitte gib deinen Namen ein!");
+        return;
+      }
+      playerName = nameInput;
+      document.getElementById('name-screen').style.display = 'none';
+      document.getElementById('quiz-screen').classList.remove('hide');
+      currentQuestion = 0;
+      score = 0;
+      selectedAnswer = null;
+      answers = Array(questions.length).fill(null);
+      showQuestion();
+
+      // Play background music
+      const bgMusic = document.getElementById('bg-music');
+      bgMusic.play().catch(e => console.log("Audio play failed:", e));
+    }
+
+    function showQuestion() {
+      if (currentQuestion >= questions.length) {
+        showResult();
+        return;
+      }
+
+      const questionText = document.getElementById('question-text');
+      const optionsContainer = document.getElementById('options-container');
+      const explanation = document.getElementById('explanation');
+      const progressBar = document.getElementById('progress-bar');
+
+      questionText.textContent = `${currentQuestion + 1}. ${questions[currentQuestion].question}`;
+      optionsContainer.innerHTML = '';
+      explanation.style.display = 'none';
+
+      questions[currentQuestion].options.forEach((option, index) => {
+        const button = document.createElement('div');
+        button.className = 'option';
+        button.textContent = option;
+        button.onclick = () => selectAnswer(index);
+        optionsContainer.appendChild(button);
+      });
+
+      // Update progress bar
+      const progress = ((currentQuestion) / questions.length) * 100;
+      progressBar.style.width = progress + '%';
+
+      // Show "Zurück" button if not first question
+      document.querySelector('.btn-prev').style.display = currentQuestion === 0 ? 'none' : 'inline-block';
+    }
+
+    function selectAnswer(index) {
+      if (selectedAnswer !== null) return;
+
+      selectedAnswer = index;
+      const options = document.querySelectorAll('.option');
+      options.forEach((opt, i) => {
+        if (i === index) {
+          opt.classList.add('selected');
+          if (i === questions[currentQuestion].correct) {
+            opt.classList.add('correct');
+            score++;
+          } else {
+            opt.classList.add('incorrect');
+            options[questions[currentQuestion].correct].classList.add('correct');
+          }
+        }
+      });
+
+      document.getElementById('explanation').textContent = questions[currentQuestion].explanation;
+      document.getElementById('explanation').style.display = 'block';
+
+      options.forEach(opt => opt.onclick = null);
+    }
+
+    function nextQuestion() {
+      answers[currentQuestion] = selectedAnswer;
+      currentQuestion++;
+      selectedAnswer = null;
+      showQuestion();
+    }
+
+    function prevQuestion() {
+      if (currentQuestion <= 0) return;
+      currentQuestion--;
+      selectedAnswer = answers[currentQuestion];
+      showQuestion();
+    }
+
+    function showResult() {
+      document.getElementById('quiz-screen').classList.add('hide');
+      document.getElementById('result-screen').classList.remove('hide');
+
+      const finalScore = document.getElementById('final-score');
+      const resultMessage = document.getElementById('result-message');
+
+      finalScore.textContent = `${score} / ${questions.length}`;
+
+      let message = "";
+      if (score === questions.length) message = "Hervorragend! Du kennst DÖRKEN wie kein anderer – ein echter Experte!";
+      else if (score >= questions.length * 0.8) message = "Sehr gut! Du hast ein tiefes Verständnis für DÖRKEN – weiter so!";
+      else if (score >= questions.length * 0.6) message = "Gut gemacht! Du hast viele wichtige Fakten gelernt – weiter üben!";
+      else message = "Du hast noch viel zu lernen – aber du bist auf dem richtigen Weg!";
+
+      resultMessage.textContent = message;
+
+      // Save to leaderboard
+      const newResult = {
+        name: playerName,
+        score: score,
+        date: new Date().toLocaleString('de-DE'),
+        timestamp: Date.now()
+      };
+
+      let leaderboard = loadLeaderboard();
+      leaderboard.push(newResult);
+      leaderboard.sort((a, b) => b.score - a.score);
+      if (leaderboard.length > 10) leaderboard = leaderboard.slice(0, 10);
+      saveLeaderboard(leaderboard);
+    }
+
+    function restartQuiz() {
+      showNameScreen();
+    }
+
+    function showLeaderboard() {
+      document.getElementById('name-screen').style.display = 'none';
+      document.getElementById('quiz-screen').classList.add('hide');
+      document.getElementById('result-screen').classList.add('hide');
+      document.getElementById('leaderboard-screen').classList.remove('hide');
+
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '';
+
+      const leaderboard = loadLeaderboard();
+      leaderboard.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="rank">${index + 1}</td>
+          <td>${entry.name}</td>
+          <td>${entry.score}/${questions.length}</td>
+          <td>${entry.date}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function goBackToStart() {
+      showNameScreen();
+    }
+
+    // Initialize on load
+    window.onload = showNameScreen;
+  </script>
+</body>
+</html>
+```
