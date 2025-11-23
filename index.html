@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Das Budenzauber Quiz</title>
+  <style>
+    :root {
+      --primary: #004d8c;
+      --secondary: #0080c0;
+      --accent: #ffcc00;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #28a745;
+      --danger: #dc3545;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--dark);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .quiz-container {
+      padding: 30px;
+    }
+    .question {
+      font-size: 1.5rem;
+      margin-bottom: 25px;
+      line-height: 1.4;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .option {
+      padding: 16px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      background: #f9f9f9;
+    }
+    .option:hover {
+      background: var(--light);
+      border-color: var(--secondary);
+    }
+    .option.selected {
+      border-color: var(--secondary);
+      background: #e3f2fd;
+    }
+    .option.correct {
+      border-color: var(--success);
+      background: #d4edda;
+      color: var(--success);
+    }
+    .option.incorrect {
+      border-color: var(--danger);
+      background: #f8d7da;
+      color: var(--danger);
+    }
+    .option.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .explanation {
+      margin-top: 20px;
+      padding: 18px;
+      background: #f0f7ff;
+      border-left: 5px solid var(--secondary);
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      font-size: 1.05rem;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      gap: 10px;
+    }
+    button {
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .btn-prev {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-next {
+      background: var(--secondary);
+      color: white;
+    }
+    .btn-start {
+      background: var(--accent);
+      color: var(--dark);
+      font-weight: bold;
+      font-size: 1.3rem;
+      padding: 18px 40px;
+      display: block;
+      margin: 40px auto;
+      border-radius: 50px;
+      width: 100%;
+    }
+    .btn-view-leaderboard {
+      background: var(--secondary);
+      color: white;
+      margin-top: 15px;
+      font-size: 1.1rem;
+      padding: 12px 25px;
+      width: 100%;
+    }
+    .btn-reset {
+      background: #dc3545;
+      color: white;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .input-group {
+      margin: 20px 0;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .result {
+      text-align: center;
+      padding: 50px 30px;
+    }
+    .result h2 {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+    .score {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 15px 0;
+    }
+    .result-message {
+      font-size: 1.2rem;
+      margin: 20px 0;
+    }
+    .btn-restart {
+      background: var(--accent);
+      color: var(--dark);
+      font-weight: bold;
+      padding: 16px 40px;
+      border-radius: 50px;
+      margin-top: 20px;
+      width: 100%;
+    }
+    .progress {
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    .leaderboard {
+      padding: 30px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .leaderboard h2 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    .leaderboard table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .leaderboard th, .leaderboard td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .leaderboard th {
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+    }
+    .leaderboard tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .leaderboard tr:hover {
+      background: #e3f2fd;
+    }
+    .leaderboard .rank {
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .hide {
+      display: none;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: var(--secondary);
+    }
+    @media (max-width: 600px) {
+      .question { font-size: 1.3rem; }
+      .options .option { padding: 14px; font-size: 1rem; }
+      .controls { flex-direction: column; }
+      .btn-start, .btn-restart { font-size: 1.2rem; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div id="name-screen" class="quiz-container">
+      <h2>Das Budenzauber Quiz</h2>
+      <p>Teste dein Wissen über DÖRKEN – mit Weihnachtszauber!</p>
+      <div class="input-group">
+        <label for="name-input">Dein Name:</label>
+        <input type="text" id="name-input" placeholder="z. B. Max Mustermann">
+      </div>
+      <button class="btn-start" onclick="startQuiz()">Quiz starten</button>
+      <button class="btn-view-leaderboard" onclick="showLeaderboard()">Bestenliste ansehen</button>
+    </div>
+
+    <div id="quiz-screen" class="quiz-container hide">
+      <div class="progress">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="question" id="question-text"></div>
+      <div class="options" id="options-container"></div>
+      <div class="explanation hide" id="explanation"></div>
+      <div class="controls">
+        <button class="btn-prev hide" id="prev-btn" onclick="prevQuestion()">Zurück</button>
+        <button class="btn-next" id="next-btn" disabled onclick="nextQuestion()">Weiter</button>
+      </div>
+    </div>
+
+    <div id="result-screen" class="result hide">
+      <h2>Glückwunsch!</h2>
+      <p>Du hast das Budenzauber Quiz abgeschlossen.</p>
+      <div class="score" id="final-score"></div>
+      <p class="result-message" id="result-message"></p>
+      <button class="btn-restart" onclick="restartQuiz()">Nochmal spielen</button>
+      <button class="btn-view-leaderboard" onclick="showLeaderboard()">Bestenliste ansehen</button>
+    </div>
+
+    <div id="leaderboard-screen" class="leaderboard hide">
+      <h2>🏆 Bestenliste</h2>
+      <div id="leaderboard-loading" class="loading hide">Lade...</div>
+      <table id="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>Name</th>
+            <th>Punkte</th>
+            <th>Datum</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+      <button class="btn-restart" onclick="goBackToStart()">Zurück zum Start</button>
+      <button class="btn-reset" onclick="resetLeaderboard()">🔒 Bestenliste zurücksetzen</button>
+    </div>
+
+  </div>
+
+  <script>
+    const questions = [
+      {q: "Welche beiden Brüder gründeten 1892 die Firma DÖRKEN?", o: ["Dr. Hellmut Herminghaus und Ewald Dörken", "Karl Dörken und Dr. Heinrich Herminghaus", "Karl E. Dörken und Ute Herminghaus", "Dr. Carl Dörken und Ewald Dörken"], c: 3, e: "Die Brüder Dr. Carl Dörken (Chemiker) und Ewald Dörken (Kaufmann) gründeten 1892 gemeinsam das Unternehmen DÖRKEN."},
+      {q: "In welche zwei Hauptgeschäftsbereiche ist DÖRKEN heute strukturiert?", o: ["Bautenfarben und Bauverbundfolien", "Multitexx und Protec Systempasten", "Dörken MKS-Systeme und CD-Color", "DÖRKEN Coatings und DÖRKEN Membranes"], c: 3, e: "Die DÖRKEN-Gruppe ist in zwei Geschäftsbereiche gegliedert: DÖRKEN Coatings und DÖRKEN Membranes."},
+      {q: "Was ist der Hauptvorteil der doppelten Klebestreifen bei DELTA-MAXX PLUS?", o: ["Langzeitbeständigkeit von 50 Jahren", "Erhöhte Hagelschlagbeständigkeit", "Material- und Zeitersparnis durch Wendbarkeit", "Verarbeitbarkeit bei -10 Grad C"], c: 2, e: "Dank der beidseitigen Klebestreifen kann ein Reststück gedreht und weiterverwendet werden."},
+      {q: "Welche Funktion erfüllen DELTA-Fassadenbahnen?", o: ["Putzträgergewebe", "Schutz der Dämmschicht vor Feuchtigkeit", "Dampfsperre innen", "Druckfestigkeit erhöhen"], c: 1, e: "DELTA-Fassadenbahnen bilden eine schützende Hinterlüftungsebene."},
+      {q: "Welchen Grundsatz verfolgt DÖRKEN seit über 125 Jahren?", o: ["Innovation ist unsere Tradition", "DÖRKEN schützt Werte", "Qualität Made in Germany", "Experten für das Verborgene"], c: 1, e: "Der Leitsatz DÖRKEN schützt Werte umfasst materiellen und immateriellen Schutz."},
+      {q: "Mit welchem Siegel wurde DÖRKEN für Innovationsmanagement ausgezeichnet?", o: ["Materialeffizienzpreis", "Fair Company", "BEST PLACE TO LEARN", "TOP 100"], c: 3, e: "Das TOP 100-Siegel zeichnet die innovativsten Unternehmen aus."},
+      {q: "Welchen Mobilitäts-Benefit bietet DÖRKEN?", o: ["JobRad", "Treibstoffzuschüsse", "Firmenwagen für alle", "ÖPNV-Ticket"], c: 0, e: "Über JobRad können Mitarbeiter Fahrräder und E-Bikes leasen."},
+      {q: "Wo hat DÖRKEN seit 2015 ein modernes Spinnvlies-Werk?", o: ["Stuttgart", "Düren", "Herdecke", "Hagen-Vorhalle"], c: 3, e: "Am Standort Hagen-Vorhalle errichtete DÖRKEN eines der modernsten Werke."},
+      {q: "Welche Garantie gibt es auf DELTA-MAXX Unterdeckbahnen?", o: ["25 Jahre", "10 Jahre", "100 Jahre", "30 Jahre"], c: 3, e: "DÖRKEN gewährt 30 Jahre Garantie auf die fachgerechte Funktion."},
+      {q: "Was macht das Geotextil bei der DELTA-MS DRAIN?", o: ["Verhindert Zuschlämmen", "Abdichtung gegen Wasser", "Gleitende Verlegung", "UV-Schutz"], c: 0, e: "Das Filtervlies hält feine Bodenpartikel zurück."},
+      {q: "Welches Lackprodukt brachte DÖRKEN 1902 den Durchbruch?", o: ["EBURIT", "Lucite", "DELTA-MKS", "Bunt-Delta"], c: 0, e: "Der holzartige Lack EBURIT brachte den Durchbruch."},
+      {q: "Was war das Ergebnis der Umstrukturierung 2020?", o: ["Übernahme Wischemann", "Gründung Bauverbundfolien", "Erster externer Vorstand", "Zusammenschluss zu Dörken Coatings GmbH"], c: 3, e: "Die Geschäftsbereiche wurden zur Dörken Coatings GmbH zusammengeführt."},
+      {q: "Welches Produkt markierte 1963 den Einstieg in Bauverbundfolien?", o: ["Dachbeschichtung", "DELTA-FOL SPF", "DELTA-MS", "DELTA-LIQUIXX"], c: 1, e: "Die Unterspannbahn DELTA-FOL SPF war der Einstieg."},
+      {q: "Welche Technologie sorgt für höhere Festigkeit bei Vliesen?", o: ["Active-Membrane-System", "BiCo Kern-Mantel-Fasertechnologie", "Orkanofen-Test", "Ad Tec Klebetechnologie"], c: 1, e: "Die BiCo Kern-Mantel-Fasertechnologie verbessert die Festigkeit."},
+      {q: "Wofür wurde DELTA-LIQUIXX entwickelt?", o: ["Nageldichtungsmasse", "Luftdichte Anschlüsse herstellen", "Flachdach-Beschichtung", "Korrosionsschutz"], c: 1, e: "DELTA-LIQUIXX ermöglicht luftdichte Abdichtung in komplexen Bereichen."},
+      {q: "Wie viele interne Entwickler hat DÖRKEN?", o: ["Etwa 75", "Über 100", "Etwa 10", "Etwa 40"], c: 3, e: "Rund 40 Entwickler arbeiten an Innovation und Optimierung."},
+      {q: "Welche Marken vereint DÖRKEN Membranes?", o: ["DELTA und LUCITE", "DELTA und EBURIT", "DELTA und Multitexx", "DELTA und CD-Color"], c: 2, e: "DÖRKEN Membranes bündelt DELTA und Multitexx."},
+      {q: "Welche dritte Säule kam 2022 hinzu?", o: ["Logistik", "Digitale Dienstleistungen", "Erneuerbare Energien", "Kunststoffformteile"], c: 3, e: "Durch Übernahme der Wischemann-Gruppe kam der Bereich Kunststoffformteile hinzu."},
+      {q: "Wie heißt das Betriebsrestaurant in Herdecke?", o: ["Kochs Treff", "Die Kantine", "Herd-Ecke", "DELTA-Bistro"], c: 2, e: "Der Name Herd-Ecke ist ein Wortspiel mit Herdecke."},
+      {q: "Welche Eigenschaft hat die DELTA-TERRAXX ULTRA?", o: ["7 Standardfarben", "Besonders leicht", "Druckfestigkeit 750 kN/m2", "Heizfunktion"], c: 2, e: "Die DELTA-TERRAXX ULTRA hat extreme Druckfestigkeit."},
+      {q: "Was ist die Funktion der DELTA-PT?", o: ["Sauberkeitsschicht", "Außenabdichtung", "Sickerschicht", "Kellerwand-Sanierung"], c: 3, e: "Die DELTA-PT ist für Innensanierung feuchter Kellerwände."},
+      {q: "Was macht Lucite MultiResist PRO besonders?", o: ["Farbwechsel beim Trocknen", "Resistent ohne Biozide", "Reduziert Zunder um 80%", "Lösungsmittelfreier Anstrich"], c: 1, e: "Lucite MultiResist PRO ist resistent ohne klassische Biozide."},
+      {q: "Welches Prüfverfahren entwickelte DÖRKEN?", o: ["Kegelfallversuch", "Schlagregentest", "Orkanofen-Test", "CBR-Stempeldurchdrück"], c: 2, e: "Der Orkanofen-Test ist ein Thermo-Oxidations-Verfahren."},
+      {q: "Welches Ereignis der 1970er war herausfordernd?", o: ["Währungsreform", "Ölkrise", "EU-Gründung", "Zweiter Weltkrieg"], c: 1, e: "Die Ölkrise führte zu dramatischem Anstieg der Rohölpreise."},
+      {q: "In wie vielen Berufen bildet DÖRKEN aus?", o: ["18", "25", "5", "12"], c: 0, e: "DÖRKEN bildet in 18 Ausbildungsberufen aus."},
+      {q: "Welches Korrosionsschutzsystem kam 1981?", o: ["DELTA-PROTEKT KL 105", "DELTA-MKS", "DELTA-HEAT", "LUCITE"], c: 1, e: "DELTA-MKS war ein schwermetallfreies Mikroschicht-System."},
+      {q: "Wodurch zeichnen sich DÖRKEN-Mitarbeiter aus?", o: ["Kurzfristige Ziele", "Strikte Anweisungsbefolgung", "Individualismus", "Sorgfalt und Ehrlichkeit"], c: 3, e: "Sorgfalt, Verantwortungsbewusstsein und Ehrlichkeit sind zentral."},
+      {q: "Was war ein Nachhaltigkeitsschritt der 1990er?", o: ["Lösungsmittelfreie Baufarben", "Recycelbare Noppenbahnen", "Photovoltaikanlage", "Umweltmanagement-Team"], c: 0, e: "DÖRKEN stieg in lösungsmittelfreie Baufarben ein."},
+      {q: "Welche Unterstützung bietet DÖRKEN beim Wohnen?", o: ["Zinslose Darlehen", "Umzugsservice", "Kindergarten", "DELTA Immobilien"], c: 3, e: "DÖRKEN vermittelt Wohnraum über DELTA Immobilien."},
+      {q: "Was war das Ziel von WIR.IHR.HIER.?", o: ["Weihnachtsgeld", "Lokale Wirtschaft unterstützen", "125-Jahr-Feier", "Rekordumsatz-Belohnung"], c: 1, e: "Das Projekt unterstützte die lokale Wirtschaft mit 1.000 Euro pro Mitarbeiter."}
+    ];
+
+    let cur = 0, score = 0, sel = null, ans = Array(questions.length).fill(null), name = "";
+
+    // NOTE: Für statische Webhostings ersetzen wir die nicht-standard 'window.storage' API
+    // durch localStorage. localStorage ist synchron; um die bisherigen async/await-Aufrufe
+    // beizubehalten, liefern die Funktionen ein Promise zurück.
+
+    async function loadLB() {
+      try {
+        const raw = localStorage.getItem('doerken-lb');
+        if (raw) {
+          return JSON.parse(raw);
+        }
+        return [];
+      } catch (error) {
+        console.log('Leaderboard laden fehlgeschlagen:', error);
+        return [];
+      }
+    }
+
+    async function saveLB(lb) {
+      try {
+        localStorage.setItem('doerken-lb', JSON.stringify(lb));
+        console.log('Leaderboard gespeichert');
+        return true;
+      } catch (error) {
+        console.error('Fehler beim Speichern:', error);
+        return false;
+      }
+    }
+
+    async function resetLeaderboard() {
+      const pw = prompt("Passwort:");
+      if (!pw) return;
+      if (pw !== "doerken2024") {
+        alert("Falsches Passwort!");
+        return;
+      }
+      if (confirm("Wirklich löschen?")) {
+        try {
+          localStorage.removeItem('doerken-lb');
+          alert("Gelöscht!");
+          showLeaderboard();
+        } catch {
+          alert("Fehler!");
+        }
+      }
+    }
+
+    function showScreen(id) {
+      ['name-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen'].forEach(s => {
+        document.getElementById(s).classList.add('hide');
+        document.getElementById(s).style.display = 'none';
+      });
+      document.getElementById(id).classList.remove('hide');
+      document.getElementById(id).style.display = 'block';
+    }
+
+    function startQuiz() {
+      name = document.getElementById('name-input').value.trim();
+      if (!name) {
+        alert("Bitte Namen eingeben!");
+        return;
+      }
+      cur = 0; score = 0; sel = null; ans = Array(questions.length).fill(null);
+      showScreen('quiz-screen');
+      showQ();
+    }
+
+    function showQ() {
+      if (cur >= questions.length) {
+        showRes();
+        return;
+      }
+      const q = questions[cur];
+      document.getElementById('question-text').textContent = (cur + 1) + ". " + q.q;
+      const cont = document.getElementById('options-container');
+      cont.innerHTML = '';
+      const wasAns = ans[cur] !== null;
+      
+      q.o.forEach((opt, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'option';
+        btn.textContent = opt;
+        if (wasAns) {
+          btn.classList.add('disabled');
+          if (i === ans[cur]) {
+            btn.classList.add('selected');
+            btn.classList.add(i === q.c ? 'correct' : 'incorrect');
+          }
+          if (i === q.c) btn.classList.add('correct');
+        } else {
+          btn.onclick = () => selAns(i);
+        }
+        cont.appendChild(btn);
+      });
+
+      const exp = document.getElementById('explanation');
+      if (wasAns) {
+        exp.textContent = q.e;
+        exp.classList.remove('hide');
+        document.getElementById('next-btn').disabled = false;
+      } else {
+        exp.classList.add('hide');
+        document.getElementById('next-btn').disabled = true;
+      }
+
+      document.getElementById('progress-bar').style.width = (cur / questions.length * 100) + '%';
+      document.getElementById('prev-btn').classList.toggle('hide', cur === 0);
+    }
+
+    function selAns(i) {
+      if (sel !== null) return;
+      sel = i;
+      const opts = document.querySelectorAll('.option');
+      opts.forEach((o, idx) => {
+        o.classList.add('disabled');
+        o.onclick = null;
+        if (idx === i) {
+          o.classList.add('selected');
+          o.classList.add(idx === questions[cur].c ? 'correct' : 'incorrect');
+          if (idx === questions[cur].c) score++;
+        }
+        if (idx === questions[cur].c) o.classList.add('correct');
+      });
+      document.getElementById('explanation').textContent = questions[cur].e;
+      document.getElementById('explanation').classList.remove('hide');
+      document.getElementById('next-btn').disabled = false;
+    }
+
+    function nextQuestion() {
+      ans[cur] = sel;
+      cur++;
+      sel = null;
+      showQ();
+    }
+
+    function prevQuestion() {
+      if (cur > 0) {
+        cur--;
+        sel = ans[cur];
+        showQ();
+      }
+    }
+
+    async function showRes() {
+      showScreen('result-screen');
+      document.getElementById('final-score').textContent = score + " / " + questions.length;
+      let msg = "";
+      if (score === questions.length) msg = "Hervorragend! Du kennst DÖRKEN perfekt!";
+      else if (score >= questions.length * 0.8) msg = "Sehr gut! Tiefes Verständnis!";
+      else if (score >= questions.length * 0.6) msg = "Gut gemacht!";
+      else msg = "Du bist auf dem richtigen Weg!";
+      document.getElementById('result-message').textContent = msg;
+
+      let lb = await loadLB();
+      lb.push({name: name, score: score, date: new Date().toLocaleString('de-DE'), ts: Date.now()});
+      lb.sort((a, b) => b.score - a.score || a.ts - b.ts);
+      if (lb.length > 10) lb = lb.slice(0, 10);
+      await saveLB(lb);
+    }
+
+    function restartQuiz() {
+      showScreen('name-screen');
+    }
+
+    async function showLeaderboard() {
+      showScreen('leaderboard-screen');
+      const tbody = document.getElementById('leaderboard-body');
+      const load = document.getElementById('leaderboard-loading');
+      load.classList.remove('hide');
+      tbody.innerHTML = '';
+      
+      try {
+        const lb = await loadLB();
+        load.classList.add('hide');
+        if (lb.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">Keine Einträge</td></tr>';
+        } else {
+          lb.forEach((e, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td class="rank">' + (i + 1) + '</td><td>' + e.name + '</td><td>' + e.score + '/' + questions.length + '</td><td>' + e.date + '</td>';
+            tbody.appendChild(tr);
+          });
+        }
+      } catch {
+        load.classList.add('hide');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Fehler</td></tr>';
+      }
+    }
+
+    function goBackToStart() {
+      showScreen('name-screen');
+    }
+
+    document.getElementById('name-input').addEventListener('keypress', e => {
+      if (e.key === 'Enter') startQuiz();
+    });
+  </script>
+</body>
+</html>
